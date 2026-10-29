@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { CORE_ENTRIES } from '../../src/catalog/core-entries'
+import * as prettier from 'prettier'
+import { CATALOG } from '../../src/catalog/core-entries'
 import { compileZoneLayout, getLockedIds, hideIds, samePreference } from '../../src/lib/compile'
-import { defineAdminLayouts, getCatalogWarnings } from '../../src/lib/config'
+import { defineAdminLayouts, getCatalogWarnings, parseAdminLayouts, type AdminLayoutsInput } from '../../src/lib/config'
 import { exportZoneLayout } from '../../src/lib/export'
+import { toZonesSnippet } from '../../src/lib/snippet'
 
 const catalog = {
   page: {
@@ -155,30 +157,44 @@ describe('defineAdminLayouts', () => {
     assert.deepEqual(defineAdminLayouts({}), { lock: false, zones: {} })
   })
 
+  it('types the section ids of catalog pages', () => {
+    // Checked by `yarn typecheck`: an id from another page is a type error, unknown pages accept any id.
+    const layouts: AdminLayoutsInput = {
+      zones: {
+        'order.details': { hide: ['core:OrderActivitySection'], sections: { side: ['widget:my-store:x'] } },
+        // @ts-expect-error the product page has no order activity section
+        'product.details': { hide: ['core:OrderActivitySection'] },
+        sidebar: { hide: ['core:nav:/promotions'] },
+      },
+    }
+
+    assert.ok(layouts.zones)
+  })
+
   it('rejects malformed ids', () => {
     assert.throws(() => {
-      return defineAdminLayouts({ zones: { 'order.details': { hide: ['OrderSummarySection'] } } })
+      return parseAdminLayouts({ zones: { 'order.details': { hide: ['OrderSummarySection'] } } })
     }, /order\.details > hide > 0: Entry ids start with "core:"/)
   })
 
   it('rejects an entry listed in two sections', () => {
     assert.throws(() => {
-      return defineAdminLayouts({ zones: { 'order.details': { sections: { main: ['core:X'], side: ['core:X'] } } } })
+      return parseAdminLayouts({ zones: { 'order.details': { sections: { main: ['core:X'], side: ['core:X'] } } } })
     }, /already listed in section "main"/)
   })
 
   it('rejects one widget replacing two entries', () => {
     assert.throws(() => {
-      return defineAdminLayouts({
+      return parseAdminLayouts({
         zones: { 'order.details': { replace: { 'core:A': 'widget:w', 'core:B': 'widget:w' } } },
       })
     }, /only one core entry/)
   })
 
   it('rejects replace in zones outside the catalog', () => {
-    assert.ok(!CORE_ENTRIES.sidebar)
+    assert.ok(!CATALOG.sidebar)
     assert.throws(() => {
-      return defineAdminLayouts({ zones: { sidebar: { replace: { 'core:Searchbar': 'widget:search' } } } })
+      return parseAdminLayouts({ zones: { sidebar: { replace: { 'core:Searchbar': 'widget:search' } } } })
     }, /not in the core entry catalog/)
   })
 
@@ -187,5 +203,46 @@ describe('defineAdminLayouts', () => {
       '"core:Nope" is not a known core entry of "order.details"',
       '"aside" is not a section of "order.details" (known: main, side)',
     ])
+  })
+})
+
+describe('toZonesSnippet', () => {
+  const zones = {
+    'order.details': {
+      hide: ['core:OrderActivitySection'],
+      sections: {
+        main: [
+          'core:OrderActiveEditSection',
+          'core:ActiveOrderClaimSection',
+          'core:ActiveOrderExchangeSection',
+          'core:ActiveOrderReturnSection',
+          'widget:my-store:order-summary',
+        ],
+        side: ['core:OrderCustomerSection', 'core:OrderGeneralSection'],
+      },
+    },
+    sidebar: { hide: ["core:nav:/it's"] },
+  }
+
+  it('prints single-quoted keys only where needed', () => {
+    const snippet = toZonesSnippet(zones)
+
+    assert.match(snippet, /^zones: \{\n  'order\.details': \{\n    hide: \['core:OrderActivitySection'\],/)
+    assert.match(snippet, /\n  sidebar: \{\n    hide: \["core:nav:\/it's"\],\n  \},\n\},$/)
+  })
+
+  it('is already formatted the way Prettier formats medusa-config', async () => {
+    // The snippet is pasted one level deep, which the wider print width makes up for.
+    const source = `const options = {\n${toZonesSnippet(zones)
+      .split('\n')
+      .map((line) => {
+        return `  ${line}`
+      })
+      .join('\n')}\n}\n`
+
+    assert.equal(
+      await prettier.format(source, { parser: 'typescript', singleQuote: true, semi: false, printWidth: 122 }),
+      source,
+    )
   })
 })

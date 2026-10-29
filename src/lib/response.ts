@@ -10,6 +10,13 @@ export const adminLayoutZoneSchema = z.object({
   code: zoneLayoutSchema.nullable(),
   /** The layout saved with "Save for everyone", in medusa-config format. */
   database: zoneLayoutSchema.nullable(),
+  /** The page's sections as they currently show for everyone, with their entries in order. */
+  sections: z.array(
+    z.object({
+      name: z.string(),
+      entries: z.array(z.object({ id: z.string(), hidden: z.boolean() })),
+    }),
+  ),
 })
 
 export const adminLayoutsResponseSchema = z.object({

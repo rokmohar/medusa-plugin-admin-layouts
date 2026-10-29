@@ -1,4 +1,4 @@
-import { CORE_ENTRIES } from '../catalog/core-entries'
+import { CATALOG, type Catalog } from '../catalog/core-entries'
 import type { ZoneLayout } from './config'
 
 export type WidgetPreference = {
@@ -10,8 +10,6 @@ export type WidgetPreference = {
 export type LayoutPreference = {
   widgets: Record<string, WidgetPreference>
 }
-
-export type Catalog = Record<string, Record<string, string[]>>
 
 /**
  * Ids that a locked zone keeps hidden, also in each user's personal layout.
@@ -29,7 +27,7 @@ export const getLockedIds = (layout: ZoneLayout) => {
  * without a saved order (order 0, e.g. a newly installed widget) appear at the top, as they do after a
  * layout is saved in the admin.
  */
-export const compileZoneLayout = (zone: string, layout: ZoneLayout, catalog: Catalog = CORE_ENTRIES) => {
+export const compileZoneLayout = (zone: string, layout: ZoneLayout, catalog: Catalog = CATALOG) => {
   const natural = catalog[zone] ?? {}
   const listed = layout.sections ?? {}
   const replace = layout.replace ?? {}

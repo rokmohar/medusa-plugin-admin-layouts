@@ -1,6 +1,6 @@
 {
   "name": "@rokmohar/medusa-plugin-admin-layouts",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Hide, move, reorder and replace core Medusa admin sections from code",
   "author": "Rok Mohar",
   "license": "MIT",

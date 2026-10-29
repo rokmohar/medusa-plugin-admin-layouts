@@ -41,6 +41,8 @@ layout for everyone.
 - **Replace** a core section with your own widget, in the exact spot the section had.
 - **Lock** hidden sections, so users can't show them again in their personal layout.
 - **Export** a layout you arranged in the admin as code, from the plugin's settings page.
+- **Autocomplete and type checks**: your editor suggests page names and the section ids of each page, and flags ids
+  that don't exist on a page.
 - **Validation at boot**: an invalid config stops the server with a clear message, unknown ids are logged as warnings.
 - **No database writes**: layouts are applied per request, so a deploy changes them immediately.
 
@@ -138,15 +140,19 @@ The config is validated when Medusa loads it. These stop the server at boot:
 - one widget replacing two sections
 - `replace` on a page the plugin has no section order for (see [Limitations](#limitations))
 
-Ids or sections that the plugin doesn't know for a page are logged as warnings, because a page can render sections only
-under some conditions.
+In TypeScript, `defineAdminLayouts` knows the page names and section ids of the supported Medusa version: your editor
+suggests them, and an id that doesn't exist on a page is a type error. Pages the plugin doesn't know, such as the
+sidebars, accept any `core:` id. At runtime, ids or sections that the plugin doesn't know for a page are logged as
+warnings.
 
 ## Zones and ids
 
 - **Zone**: a page, named like its widget zones without the position: `order.details`, `product.list`,
-  `customer.details`, `topbar`, `sidebar`. **Settings → Admin layouts** lists all of them.
-- **Core section**: `core:` followed by the section's id in the dashboard, e.g. `core:OrderSummarySection`. The ids of
-  every page are in [`src/catalog/core-entries.ts`](./src/catalog/core-entries.ts). Most detail pages also have
+  `customer.details`, `topbar`, `sidebar`. **Settings → Admin layouts** lists all of them; turn on **Show pages with
+  Medusa's default layout** to see pages you haven't changed.
+- **Core section**: `core:` followed by the section's id in the dashboard, e.g. `core:OrderSummarySection`. Click
+  **Sections** next to a page in **Settings → Admin layouts** to see its ids in their current order, with a copy button
+  for each. They are also in [`src/catalog/core-entries.ts`](./src/catalog/core-entries.ts). Most detail pages also have
   `core:MetadataSection`, `core:JsonViewSection` and `core:RequiredPermissionsSection`.
 - **Widget**: `widget:` followed by the `id` from `defineWidgetConfig`. Give every widget you place an explicit id,
   otherwise Medusa derives one from the file path and it changes when the file moves. Prefix ids with your project or
@@ -191,7 +197,8 @@ zones: {
 Arranging a page by hand is often easier than writing the config:
 
 1. Open the page and arrange it with the layout customizer in the top bar, then choose **Save for everyone**.
-2. Open **Settings → Admin layouts** and click **Copy as code** next to the page, or **Copy all as code**.
+2. Open **Settings → Admin layouts** and click **Copy as code** next to the page, or **Copy all as code**. The copied
+   code is formatted like Prettier formats `medusa-config.ts` with single quotes.
 3. Paste the copied `zones` into the plugin options.
 
 Once a page is configured in code, changing its default layout with **Save for everyone** is rejected with a message

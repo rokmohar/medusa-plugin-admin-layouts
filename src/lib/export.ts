@@ -1,14 +1,14 @@
-import { CORE_ENTRIES } from '../catalog/core-entries'
-import type { Catalog, LayoutPreference } from './compile'
+import { CATALOG, type Catalog } from '../catalog/core-entries'
+import type { LayoutPreference } from './compile'
 import type { ZoneLayout } from './config'
 
-const naturalSectionOf = (natural: Record<string, string[]>, id: string) => {
+const naturalSectionOf = (natural: Catalog[string], id: string) => {
   return Object.keys(natural).find((section) => {
     return natural[section]?.includes(id)
   })
 }
 
-const sameOrder = (a: string[], b: string[]) => {
+const sameOrder = (a: readonly string[], b: readonly string[]) => {
   return (
     a.length === b.length &&
     a.every((id, index) => {
@@ -18,29 +18,18 @@ const sameOrder = (a: string[], b: string[]) => {
 }
 
 /**
- * Turns a layout saved in the admin into a zone layout for medusa-config. Sections whose order matches
- * the catalog are left out, so the output only holds what was actually changed.
- *
- * Sections are ordered the way the dashboard's LayoutComposer does it: core entries in source order,
- * then saved widgets, stably sorted by their saved order, where a missing order counts as 0.
+ * Arranges a zone's entries the way the dashboard's LayoutComposer does: core entries in source order, then
+ * saved widgets, stably sorted by their saved order, where a missing order counts as 0. Entries without a
+ * known section are left out.
  */
-export const exportZoneLayout = (
-  zone: string,
-  preference: LayoutPreference,
-  catalog: Catalog = CORE_ENTRIES,
-): ZoneLayout => {
+export const arrangeZone = (zone: string, preference: LayoutPreference, catalog: Catalog = CATALOG) => {
   const natural = catalog[zone] ?? {}
-  const entries = Object.entries(preference.widgets)
   const coreIds = Object.values(natural).flat()
   const rawOrder = [
     ...coreIds,
-    ...entries
-      .map(([id]) => {
-        return id
-      })
-      .filter((id) => {
-        return !coreIds.includes(id)
-      }),
+    ...Object.keys(preference.widgets).filter((id) => {
+      return !coreIds.includes(id)
+    }),
   ]
   const bySection = new Map<string, string[]>()
 
@@ -52,19 +41,36 @@ export const exportZoneLayout = (
     }
   }
 
+  return new Map(
+    [...bySection].map(([section, ids]) => {
+      const sorted = [...ids].sort((a, b) => {
+        return (preference.widgets[a]?.order ?? 0) - (preference.widgets[b]?.order ?? 0)
+      })
+
+      return [section, sorted]
+    }),
+  )
+}
+
+/**
+ * Turns a layout saved in the admin into a zone layout for medusa-config. Sections whose order matches
+ * the catalog are left out, so the output only holds what was actually changed.
+ */
+export const exportZoneLayout = (
+  zone: string,
+  preference: LayoutPreference,
+  catalog: Catalog = CATALOG,
+): ZoneLayout => {
+  const natural = catalog[zone] ?? {}
   const sections: Record<string, string[]> = {}
 
-  for (const [section, ids] of bySection) {
-    const sorted = [...ids].sort((a, b) => {
-      return (preference.widgets[a]?.order ?? 0) - (preference.widgets[b]?.order ?? 0)
-    })
-
-    if (!sameOrder(sorted, natural[section] ?? [])) {
-      sections[section] = sorted
+  for (const [section, ids] of arrangeZone(zone, preference, catalog)) {
+    if (!sameOrder(ids, natural[section] ?? [])) {
+      sections[section] = ids
     }
   }
 
-  const hide = entries
+  const hide = Object.entries(preference.widgets)
     .filter(([, pref]) => {
       return pref.hidden === true
     })

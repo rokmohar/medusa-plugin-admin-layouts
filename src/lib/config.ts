@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CORE_ENTRIES } from '../catalog/core-entries'
+import { CATALOG, type CORE_ENTRIES } from '../catalog/core-entries'
 
 export const PLUGIN_NAME = '@rokmohar/medusa-plugin-admin-layouts'
 
@@ -56,7 +56,7 @@ export const adminLayoutsSchema = z
         })
       }
 
-      if (replacements.length > 0 && !CORE_ENTRIES[zone]) {
+      if (replacements.length > 0 && !CATALOG[zone]) {
         ctx.addIssue({
           code: 'custom',
           path: ['zones', zone, 'replace'],
@@ -67,15 +67,56 @@ export const adminLayoutsSchema = z
   })
 
 export type ZoneLayout = z.infer<typeof zoneLayoutSchema>
-export type AdminLayoutsInput = z.input<typeof adminLayoutsSchema>
 export type AdminLayouts = z.output<typeof adminLayoutsSchema>
+
+type CoreEntries = typeof CORE_ENTRIES
+
+type EntryIdsOf<TSections> = TSections[keyof TSections] extends infer TList
+  ? TList extends readonly (infer TId)[]
+    ? TId
+    : never
+  : never
+
+/** A page known to the core entry catalog, e.g. `"order.details"`. */
+export type CatalogZone = keyof CoreEntries
+
+/** A widget, by the id from its `defineWidgetConfig`. */
+export type WidgetId = `widget:${string}`
+
+/** The core entries of a page. Pages outside the catalog accept any `core:` id. */
+export type CoreEntryId<TZone extends string = string> = TZone extends CatalogZone
+  ? EntryIdsOf<CoreEntries[TZone]>
+  : `core:${string}`
+
+/** The layout sections of a page, e.g. `"main"` and `"side"`. */
+export type SectionName<TZone extends string = string> = TZone extends CatalogZone
+  ? keyof CoreEntries[TZone] & string
+  : string
+
+export type ZoneLayoutInput<TZone extends string = string> = {
+  /** Sections and widgets to hide. */
+  hide?: (CoreEntryId<TZone> | WidgetId)[]
+  /** Core section → widget that takes its spot. The core section is hidden. */
+  replace?: Partial<Record<CoreEntryId<TZone>, WidgetId>>
+  /** Layout section → ids to show first, in this order. Listing an id under another section moves it there. */
+  sections?: Partial<Record<SectionName<TZone>, (CoreEntryId<TZone> | WidgetId)[]>>
+  /** Overrides the top-level `lock` for this page. */
+  lock?: boolean
+}
+
+export type AdminLayoutsInput = {
+  /** Keep hidden and replaced sections hidden in users' personal layouts. Defaults to `false`. */
+  lock?: boolean
+  /** The layout of each page, keyed by zone. Pages in the catalog get their section ids checked. */
+  zones?: { [TZone in CatalogZone]?: ZoneLayoutInput<TZone> } & Record<string, ZoneLayoutInput>
+}
 
 /**
  * Returns warnings for core entry ids that don't exist in the catalog of the supported Medusa version.
  * They are not errors, because a zone can render entries the catalog doesn't know about.
  */
 export const getCatalogWarnings = (zone: string, layout: ZoneLayout) => {
-  const natural = CORE_ENTRIES[zone]
+  const natural = CATALOG[zone]
 
   if (!natural) {
     return []
@@ -105,10 +146,10 @@ export const getCatalogWarnings = (zone: string, layout: ZoneLayout) => {
 }
 
 /**
- * Validates the admin layouts declared in medusa-config. Throws on invalid config, so the server
- * fails at boot instead of serving a broken layout.
+ * Validates admin layouts from an untyped source. Throws on invalid config, so the server fails at boot
+ * instead of serving a broken layout.
  */
-export const defineAdminLayouts = (input: AdminLayoutsInput): AdminLayouts => {
+export const parseAdminLayouts = (input: unknown): AdminLayouts => {
   const result = adminLayoutsSchema.safeParse(input)
 
   if (!result.success) {
@@ -126,6 +167,14 @@ export const defineAdminLayouts = (input: AdminLayoutsInput): AdminLayouts => {
   }
 
   return result.data
+}
+
+/**
+ * Declares the admin layouts in medusa-config, with the page names and section ids of the supported
+ * Medusa version checked by TypeScript and the whole config validated at boot.
+ */
+export const defineAdminLayouts = (input: AdminLayoutsInput): AdminLayouts => {
+  return parseAdminLayouts(input)
 }
 
 export const isLocked = (config: AdminLayouts, zone: string) => {

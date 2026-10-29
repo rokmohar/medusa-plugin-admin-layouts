@@ -1,8 +1,9 @@
 import { MedusaRequest, MedusaResponse } from '@medusajs/framework'
 import { ContainerRegistrationKeys, Modules } from '@medusajs/framework/utils'
-import { CATALOG_MEDUSA_VERSION, CORE_ENTRIES } from '../../../catalog/core-entries'
+import { CATALOG, CATALOG_MEDUSA_VERSION } from '../../../catalog/core-entries'
 import { getCatalogWarnings, isLocked } from '../../../lib/config'
-import { exportZoneLayout } from '../../../lib/export'
+import { compileZoneLayout } from '../../../lib/compile'
+import { arrangeZone, exportZoneLayout } from '../../../lib/export'
 import { getAdminLayouts, getMedusaVersion } from '../../../lib/options'
 import type { AdminLayoutsResponse, AdminLayoutZone } from '../../../lib/response'
 
@@ -15,12 +16,21 @@ export async function GET(req: MedusaRequest, res: MedusaResponse<AdminLayoutsRe
       return [layout.zone, layout.configuration]
     }),
   )
-  const zoneNames = new Set([...Object.keys(CORE_ENTRIES), ...Object.keys(config.zones), ...storedByZone.keys()])
+  const zoneNames = new Set([...Object.keys(CATALOG), ...Object.keys(config.zones), ...storedByZone.keys()])
 
   const zones = [...zoneNames].sort().map((zone): AdminLayoutZone => {
     const code = config.zones[zone] ?? null
     const preference = storedByZone.get(zone)
     const database = preference ? exportZoneLayout(zone, preference) : null
+    const current = code ? compileZoneLayout(zone, code) : (preference ?? { widgets: {} })
+    const sections = [...arrangeZone(zone, current)].map(([name, ids]) => {
+      return {
+        name,
+        entries: ids.map((id) => {
+          return { id, hidden: current.widgets[id]?.hidden ?? false }
+        }),
+      }
+    })
 
     return {
       zone,
@@ -29,6 +39,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse<AdminLayoutsRe
       warnings: code ? getCatalogWarnings(zone, code) : [],
       code,
       database,
+      sections,
     }
   })
 
