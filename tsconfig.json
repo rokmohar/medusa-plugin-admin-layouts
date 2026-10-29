@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": "./",
+    "outDir": "./.medusa/server",
+    "lib": ["es2022"],
+    "target": "es2022",
+    "module": "node20",
+    "moduleResolution": "node16",
+    "jsx": "react-jsx",
+    "strict": true,
+    "allowJs": true,
+    "checkJs": false,
+    "sourceMap": false,
+    "declaration": true,
+    "skipLibCheck": true,
+    "declarationMap": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUncheckedIndexedAccess": true,
+    "esModuleInterop": true,
+    "inlineSourceMap": true,
+    "strictNullChecks": true,
+    "noImplicitReturns": true,
+    "resolveJsonModule": true,
+    "downlevelIteration": true,
+    "noImplicitOverride": true,
+    "noUnusedParameters": true,
+    "skipDefaultLibCheck": true,
+    "strictFunctionTypes": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "exclude": [".cache", ".medusa/admin", ".medusa/server", "node_modules", "src/admin"],
+  "include": ["**/*", ".medusa/types/*"],
+  "ts-node": {
+    "swc": true,
+    "compilerOptions": {
+      "module": "commonjs",
+      "moduleResolution": "node10"
+    }
+  }
+}

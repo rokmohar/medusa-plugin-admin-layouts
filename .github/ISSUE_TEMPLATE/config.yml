@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/rokmohar/medusa-plugin-admin-layouts#readme
+    about: Configuration, zones and ids, exporting layouts and limits.
+  - name: Report a security vulnerability
+    url: https://github.com/rokmohar/medusa-plugin-admin-layouts/security/advisories/new
+    about: Report vulnerabilities privately, not in public issues.

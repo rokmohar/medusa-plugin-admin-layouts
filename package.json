@@ -1,0 +1,92 @@
+{
+  "name": "@rokmohar/medusa-plugin-admin-layouts",
+  "version": "0.1.0",
+  "description": "Hide, move, reorder and replace core Medusa admin sections from code",
+  "author": "Rok Mohar",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rokmohar/medusa-plugin-admin-layouts.git"
+  },
+  "homepage": "https://github.com/rokmohar/medusa-plugin-admin-layouts#readme",
+  "bugs": {
+    "url": "https://github.com/rokmohar/medusa-plugin-admin-layouts/issues"
+  },
+  "keywords": [
+    "medusa",
+    "medusa-v2",
+    "medusa-plugin",
+    "medusa-plugin-admin",
+    "medusa-plugin-admin-layouts"
+  ],
+  "files": [
+    ".medusa/server/src",
+    "README.md"
+  ],
+  "main": ".medusa/server/src/index.js",
+  "exports": {
+    "./package.json": "./package.json",
+    "./admin": {
+      "import": "./.medusa/server/src/admin/index.mjs",
+      "require": "./.medusa/server/src/admin/index.js",
+      "default": "./.medusa/server/src/admin/index.js"
+    },
+    ".": "./.medusa/server/src/index.js"
+  },
+  "scripts": {
+    "build": "medusa plugin:build",
+    "dev": "medusa plugin:develop",
+    "prepublishOnly": "medusa plugin:build",
+    "catalog": "node --require ts-node/register scripts/generate-catalog.ts",
+    "typecheck": "yarn typecheck:server && yarn typecheck:admin",
+    "typecheck:server": "tsc --noEmit --pretty --project tsconfig.json",
+    "typecheck:admin": "tsc --noEmit --pretty --project src/admin/tsconfig.json",
+    "test": "node --require ts-node/register --test \"tests/unit/*.test.ts\"",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" --cache --cache-strategy content",
+    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix --cache --cache-strategy content",
+    "format": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\" --cache --cache-strategy content --log-level warn",
+    "format:fix": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\" --cache --cache-strategy content --log-level warn"
+  },
+  "devDependencies": {
+    "@medusajs/admin-sdk": "~2.22.1",
+    "@medusajs/cli": "~2.22.1",
+    "@medusajs/framework": "~2.22.1",
+    "@medusajs/js-sdk": "~2.22.1",
+    "@medusajs/medusa": "~2.22.1",
+    "@medusajs/types": "~2.22.1",
+    "@medusajs/ui": "^4.2.8",
+    "@swc/core": "^1.16.20",
+    "@tanstack/react-query": "5.64.2",
+    "@types/node": "^22.20.5",
+    "@types/react": "^18.3.31",
+    "awilix": "^8.0.1",
+    "eslint": "^10.13.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.7",
+    "eslint-plugin-unused-imports": "^4.4.1",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.72.1",
+    "yalc": "^1.0.0-pre.53",
+    "zod": "4.2.0"
+  },
+  "peerDependencies": {
+    "@medusajs/admin-sdk": "~2.22.0",
+    "@medusajs/framework": "~2.22.0",
+    "@medusajs/js-sdk": "~2.22.0",
+    "@medusajs/medusa": "~2.22.0",
+    "@medusajs/ui": "^4.2.6",
+    "@tanstack/react-query": "5.64.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zod": "^4.2.0"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "packageManager": "yarn@4.14.1"
+}

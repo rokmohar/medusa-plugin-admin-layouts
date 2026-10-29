@@ -1,0 +1,51 @@
+name: Bug report
+description: Something in the plugin does not work as documented.
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Security vulnerabilities go through the [security policy](https://github.com/rokmohar/medusa-plugin-admin-layouts/security/policy), not here.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead. Include error messages, logs and screenshots of the admin page.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: A minimal sequence of steps that triggers the bug.
+      placeholder: |
+        1. Configure the zone with ...
+        2. Open /app/orders/:id
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration
+      description: The plugin entry from medusa-config.ts, and the `defineWidgetConfig` of any widget the layout places.
+      render: ts
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: medusa-version
+    attributes:
+      label: Medusa version
+      placeholder: 2.22.1
+    validations:
+      required: true
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js version
+      placeholder: 22.12.0
