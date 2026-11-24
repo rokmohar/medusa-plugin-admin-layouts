@@ -50,6 +50,7 @@ layout for everyone.
 
 | Plugin   | Medusa   | Node       |
 | -------- | -------- | ---------- |
+| `~0.2.0` | `2.23.x` | `>= 22.12` |
 | `~0.1.0` | `2.22.x` | `>= 22.12` |
 
 The plugin ships the section order of every admin page of one Medusa minor version, which replacing and reordering rely

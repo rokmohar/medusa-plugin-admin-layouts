@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "rootDir": "./",
     "outDir": "./.medusa/server",
     "lib": ["es2022"],
@@ -23,7 +22,6 @@
     "strictNullChecks": true,
     "noImplicitReturns": true,
     "resolveJsonModule": true,
-    "downlevelIteration": true,
     "noImplicitOverride": true,
     "noUnusedParameters": true,
     "skipDefaultLibCheck": true,
